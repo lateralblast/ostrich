@@ -15,7 +15,7 @@ of SSH that can not be upgraded.
 This script provides a wrapper that:
 
 - Creates a docker image based on Ubuntu 16.04 which has a version of SSH with older ciphers
-- Runs SSH from the docker container with older ciper options
+- Runs SSH from the docker container with older cipher options
 
 License
 -------
