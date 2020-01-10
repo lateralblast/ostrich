@@ -1,4 +1,4 @@
-![alt tag](https://raw.githubusercontent.com/lateralblast/ostrich/master/ostrich.png
+![alt tag](https://raw.githubusercontent.com/lateralblast/ostrich/master/ostrich.png)
 
 OSTRICH
 =======
