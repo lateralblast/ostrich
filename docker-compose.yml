@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  ostrich:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ostrich
+    container_name: ostrich
+    entrypoint: /bin/bash
+    working_dir: /root
