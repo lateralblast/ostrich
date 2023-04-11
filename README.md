@@ -37,6 +37,12 @@ The following components are required on the deployment host and target:
 
 The script will check if the docker image ostrich exists, if not it will create it.
 
+If for some reason this fails, there is a Dockerfile included that can be run manaually in the directory where the Dockerfile is:
+
+```
+docker build .
+```
+
 Examples
 --------
 
