@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.0.2
+# Version:      0.0.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -53,6 +53,38 @@ print_help() {
 
 print_version () {
   echo "$app_vers"
+  return
+}
+
+# Handle output
+
+handle_output () {
+  output=$1
+  if [ "$verbose" == "true" ]; then
+    echo "$output"
+  fi
+  return
+}
+
+# Check docker
+
+check_docker () {
+  handle_output "Information: Checking docker"
+  test=$(which docker |grep -v found)
+  if [[ ! "$test" =~ "docker" ]]; then
+    echo "Warning: docker not installed"
+    exit
+  else
+    handle_output "Information: Found $test"
+  fi
+  handle_output "Information: Checking docker-compose"
+  test=$(which docker-compose |grep -v found)
+  if [[ ! "$test" =~ "docker" ]]; then
+    echo "Warning: docker-compose not installed"
+    exit
+  else
+    handle_output "Information: Found $test"
+  fi
   return
 }
 
@@ -141,16 +173,12 @@ fi
 # Handle arguments
 
 if [ ! "$user" ]; then
-  while getopts ":hvVu:s:o:c:d:" args ; do
+  while getopts ":hvVu:s:o:Cc:d:" args ; do
     case $args in
-      h)
-        # Display help
-        print_help
-        exit
-        ;;
-      V)
-        # Display Version
-        print_version
+      C)
+        # Check Docker install 
+        verbose="true"
+        check_docker
         exit
         ;;
       c)
@@ -163,6 +191,24 @@ if [ ! "$user" ]; then
         # Destination file (SCP)
         dst_file=$OPTARG
         ;;
+      h)
+        # Display help
+        print_help
+        exit
+        ;;
+      o)
+        # SSH/SCP Option
+        new_opts=$OPTARG
+        ;;
+      s)
+        # Hostname
+        host=$OPTARG
+        ;;
+      V)
+        # Display Version
+        print_version
+        exit
+        ;;
       v)
         # Verbose mode
         verbose="true"
@@ -171,17 +217,10 @@ if [ ! "$user" ]; then
         # Username
         user=$OPTARG
         ;;
-      s)
-        # Hostname
-        host=$OPTARG
-        ;;
-      o)
-        # SSH/SCP Option
-        new_opts=$OPTARG
-        ;;
       *)
         # Display help
         print_help
+        exit
         ;;
     esac
   done
@@ -199,6 +238,10 @@ if [ ! "$host" ]; then
   echo "No host specified"
   exit
 fi
+
+# Check docker is installed
+
+check_docker
 
 # Check container exists
 

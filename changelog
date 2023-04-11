@@ -3,3 +3,7 @@
 # Initial version
 # 0.0.2: Fri 29 May 2020 11:39:24 AEST
 # Added SCP functionality
+# 0.0.3: Tue 11 Apr 2023 15:35:25 AEST
+# Updated documentation and added check for docker(-compose)
+# 0.0.4: Tue 11 Apr 2023 15:49:23 AEST
+# Improved verbose output

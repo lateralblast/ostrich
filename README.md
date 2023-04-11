@@ -5,6 +5,8 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
+Version: 0.0.4
+
 Introduction
 ------------
 
@@ -34,13 +36,25 @@ Requirements
 The following components are required on the deployment host and target:
 
 - docker
+- docker-compose
+
+An example of installing docker and docker-compose on Ubuntu:
+
+```
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+sudo apt-update
+sudo apt install docker-ce
+sudo apt install docker-compose
+```
 
 The script will check if the docker image ostrich exists, if not it will create it.
 
-If for some reason this fails, there is a Dockerfile included that can be run manaually in the directory where the Dockerfile is:
+If for some reason this fails, there is a Docker and compose file included that can be run manaually in the directory where the Dockerfile is:
 
 ```
-docker build .
+docker-compose build
 ```
 
 Examples
@@ -74,25 +88,28 @@ Get usage information:
 
 ```
 ./ostrich.sh -h
-ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.2
+
+ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.4
 Richard Spindler <richard@lateralblast.com.au>
 
 Usage Information:
 
-      h)
-         Display help
-      V)
-         Display Version
+      C)
+         Check Docker install
       c)
          Source file to copy (SCP)
       d)
          Destination file (SCP)
+      h)
+         Display help
+      o)
+         SSH/SCP Option
+      s)
+         Hostname
+      V)
+         Display Version
       v)
          Verbose mode
       u)
          Username
-      s)
-         Hostname
-      o)
-         SSH/SCP Option
 ```
