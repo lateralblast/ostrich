@@ -11,3 +11,5 @@
 # Code improvements
 # 0.0.6: Fri  9 Aug 2024 17:01:49 AEST
 # Added strict and debug switches
+# 0.0.7: Fri  9 Aug 2024 17:24:36 AEST
+# Shellcheck fixes and clean up

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.0.6
+# Version:      0.0.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -12,6 +12,8 @@
 # Vendor:       UNIX
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script for connecting to devices that require old SSH ciphers
+
+# shellcheck disable=SC2034
 
 # Set defaults
 
@@ -29,7 +31,7 @@ cont_name="ostrich"
 
 # Get command line args
 
-args="$@"
+args="$*"
 
 # Default SSH / SCP options
 
@@ -64,9 +66,17 @@ print_version () {
 # Handle output
 
 handle_output () {
-  output=$1
-  if [ "$verbose" == "true" ]; then
-    echo "$output"
+  output="$1"
+  type="$2"
+  if [ "$verbose" = "true" ]; then
+    case $type in
+      execute)
+        echo "Executing: $output"
+        ;;
+      *)
+        echo "$output"
+        ;;
+    esac
   fi
   return
 }
@@ -96,7 +106,7 @@ check_docker () {
 # If given no command line arguments print usage information
 # Handle when give @ in first argument
 
-if [ `expr "$args" : "\-"` != 1 ]; then
+if [[ "$args" =~ "-" ]]; then
   if [ "$1" ]; then
     if [ "$2" ]; then
       if [ "$2" == "--verbose" ]; then
@@ -115,7 +125,7 @@ if [ `expr "$args" : "\-"` != 1 ]; then
         if [ "$test" ]; then
           use_ssh="false"
           use_scp="true"
-          src_file=$1
+          src_file="$1"
           details=$(echo "$2" |cut -f1 -d: |tr -d '\r')
           dst_file=$(echo "$2" |cut -f2 -d:)
           if [ "$dst_file" = "" ]; then
@@ -292,23 +302,15 @@ fi
 # Strip directory name from file mapped into docker
 
 if [ "$use_scp" = "true" ]; then
-  map_file=$(basename -- $src_file)
-fi
-
-# Call docker
-
-if [ "$verbose" = "true" ]; then
-  if [ "$use_scp" = "true" ]; then
-    echo "Executing: docker run -v $src_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $user_name@$host_name:$dst_file\""
-  else
-    echo "Executing: docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $user_name@$host_name\""
-  fi
+  map_file=$( basename -- "$src_file" )
 fi
 
 # Run command SSH/SCP inside docker container to connect to host
 
 if [ "$use_scp" = "true" ]; then
-  docker run -v $src_file:/tmp/$map_file -it $name /bin/bash -c "scp $opts /tmp/$map_file $user_name@$host_name:$dst_file"
+  command="docker run -v $src_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $user_name@$host_name:$dst_file\""
 else
-  docker run -it $cont_name /bin/bash -c "ssh $opts $user_name@$host_name"
+  command="docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $user_name@$host_name\""
 fi
+handle_output "$command" "execute"
+eval "$command"
