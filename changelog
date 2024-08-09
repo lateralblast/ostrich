@@ -7,3 +7,7 @@
 # Updated documentation and added check for docker(-compose)
 # 0.0.4: Tue 11 Apr 2023 15:49:23 AEST
 # Improved verbose output
+# 0.0.5: Fri  9 Aug 2024 16:03:15 AEST
+# Code improvements
+# 0.0.6: Fri  9 Aug 2024 17:01:49 AEST
+# Added strict and debug switches

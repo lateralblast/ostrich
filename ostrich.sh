@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.0.4
+# Version:      0.0.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,25 +16,31 @@
 # Set defaults
 
 verbose="false"
+do_print_help="false"
+do_print_version="false"
+use_ssh="true"
+use_scp="false"
+do_strict="true"
+do_debug="false"
 
 # Container name
 
-name="ostrich"
+cont_name="ostrich"
 
 # Get command line args
 
-args=$@
+args="$@"
 
 # Default SSH / SCP options
 
-opts="-oKexAlgorithms=+diffie-hellman-group1-sha1 -oStrictHostKeyChecking=no"
+ssh_opts="-oKexAlgorithms=+diffie-hellman-group1-sha1 -oStrictHostKeyChecking=no"
 
 # Get the script info from the script itself
 
-app_vers=$(grep "^# Version" "$0" |awk '{print $3}')
-app_name=$(grep "^# Name" "$0" |awk '{for (i=3;i<=NF;++i) printf $i" "}' |sed 's/ $//g')
-app_pkgr=$(grep "^# Packager" "$0" |awk '{for (i=3;i<=NF;++i) printf $i" "}')
-app_help=$(grep -A1 " [A-Z,a-z])$" "$0" |sed "s/[#,\-\-]//g" |sed '/^\s*$/d')
+app_vers=$( grep "^# Version" "$0" | awk '{print $3}' )
+app_name=$( grep "^# Name" "$0" | awk '{for (i=3;i<=NF;++i) printf $i" "}' | sed 's/ $//g' )
+app_pkgr=$( grep "^# Packager" "$0" | awk '{for (i=3;i<=NF;++i) printf $i" "}' )
+app_help=$( grep -A1 "\-[A-Z,a-z]|" "$0" | sed "s/^\-\-//g" | sed "s/# //g" | tr -s " " )
 
 # Print help
 
@@ -45,7 +51,6 @@ print_help() {
   echo "Usage Information:"
   echo ""
   echo "$app_help"
-  echo ""
   return
 }
 
@@ -88,11 +93,6 @@ check_docker () {
   return
 }
 
-# Handle SCP and SSH
-
-use_ssh="true"
-use_scp="false"
-
 # If given no command line arguments print usage information
 # Handle when give @ in first argument
 
@@ -102,14 +102,14 @@ if [ `expr "$args" : "\-"` != 1 ]; then
       if [ "$2" == "--verbose" ]; then
         test=$(echo "$1" |grep "@")
         if [ "$test" ]; then
-          user=$(echo "$1" |cut -f1 -d@)
-          host=$(echo "$1" |cut -f2 -d@)
+          user_name=$(echo "$1" |cut -f1 -d@)
+          host_name=$(echo "$1" |cut -f2 -d@)
         else
-          user=$(whoami)
-          host=$1
+          user_name=$(whoami)
+          host_name=$1
         fi
-        user=$(whoami)
-        host=$1
+        user_name=$(whoami)
+        host_name=$1
       else
         test=$(echo "$2" |grep ":")
         if [ "$test" ]; then
@@ -123,11 +123,11 @@ if [ `expr "$args" : "\-"` != 1 ]; then
           fi
           test=$(echo "$details" |grep "@")
           if [ "$test" ]; then
-            user=$(echo "$details" |cut -f1 -d@)
-            host=$(echo "$details" |cut -f2 -d@)
+            user_name=$(echo "$details" |cut -f1 -d@)
+            host_name=$(echo "$details" |cut -f2 -d@)
           else
-            user=$(whoami)
-            host=$details
+            user_name=$(whoami)
+            host_name=$details
           fi
         else
           echo "No destination file specified"
@@ -137,11 +137,11 @@ if [ `expr "$args" : "\-"` != 1 ]; then
     else
       test=$(echo "$1" |grep "@")
       if [ "$test" ]; then
-        user=$(echo "$1" |cut -f1 -d@)
-        host=$(echo "$1" |cut -f2 -d@)
+        user_name=$(echo "$1" |cut -f1 -d@)
+        host_name=$(echo "$1" |cut -f2 -d@)
       else
-        user=$(whoami)
-        host=$1
+        user_name=$(whoami)
+        host_name=$1
       fi
     fi
   else
@@ -150,104 +150,134 @@ if [ `expr "$args" : "\-"` != 1 ]; then
   fi
 fi
 
-# Handle --help
+# Handle arguments
 
-if [ "$1" = "--help" ]; then
+while test $# -gt 0; do
+  case $args in
+    -C|--check|--checkdocker)
+      # Check Docker install
+      verbose="true"
+      do_check_docker="true"
+      shift
+      ;;
+    -c|--copy|--scp)
+      # Source file to copy (SCP)
+      do_check_docker="true"
+      use_scp="true"
+      use_ssh="false"
+      src_file="$2"
+      shift 2
+      ;;
+    -d|--dest|--destination)
+      # Destination file (SCP)
+      do_check_docker="true"
+      dst_file="$2"
+      shift 2
+      ;;
+    -D|--debug)
+      # Enable debug mode
+      do_debug="true"
+      shift
+      ;;
+    -h|--help|--usage)
+      # Display help
+      do_print_help="true"
+      shift
+      ;;
+    -n|--nostrict)
+      # Disable strict mode
+      do_strict="false"
+      shift
+      ;;
+    -o|--opts|--options)
+      # SSH/SCP Options
+      do_check_docker="true"
+      new_opts="$2"
+      shift 2
+      ;;
+    -s|--host|--hostname)
+      # Specify hostname
+      host_name="$2"
+      shift 2
+      ;;
+    -t|--tag|--name)
+      # Container name
+      cont_name="$2"
+      shift 2
+      ;;
+    -V|--version)
+      # Display Version
+      do_print_version="true"
+      shift
+      ;;
+    -v|--verbose)
+      # Enable verbose mode
+      verbose="true"
+      shift
+      ;;
+    -u|--user|--username)
+      # Specify username
+      user_name="$2"
+      shift 2
+      ;;
+    *)
+      # Display help
+      do_print_help="true"
+      shift
+      ;;
+  esac
+done
+
+# Print help
+
+if [ "$do_print_help" = "true" ]; then
   print_help
   exit
 fi
 
-# Handle --version
+# Print version
 
-if [ "$1" = "--version" ]; then
+if [ "$do_print_version" = "true" ]; then
   print_version
   exit
 fi
 
-# Handle --verbose
+# Enable strict mode
 
-if [ "$2" = "--verbose" ] || [ "$3" = "--verbose" ]; then
-  verbose="true"
+if [ "$do_strict" = "true" ]; then
+  set -eu
 fi
 
-# Handle arguments
+# Enable debug mode
 
-if [ ! "$user" ]; then
-  while getopts ":hvVu:s:o:Cc:d:" args ; do
-    case $args in
-      C)
-        # Check Docker install 
-        verbose="true"
-        check_docker
-        exit
-        ;;
-      c)
-        # Source file to copy (SCP)
-        use_scp="true"
-        use_ssh="false"
-        src_file=$OPTARG
-        ;;
-      d)
-        # Destination file (SCP)
-        dst_file=$OPTARG
-        ;;
-      h)
-        # Display help
-        print_help
-        exit
-        ;;
-      o)
-        # SSH/SCP Option
-        new_opts=$OPTARG
-        ;;
-      s)
-        # Hostname
-        host=$OPTARG
-        ;;
-      V)
-        # Display Version
-        print_version
-        exit
-        ;;
-      v)
-        # Verbose mode
-        verbose="true"
-        ;;
-      u)
-        # Username
-        user=$OPTARG
-        ;;
-      *)
-        # Display help
-        print_help
-        exit
-        ;;
-    esac
-  done
+if [ "$do_debug" = "true" ]; then
+  set -x
 fi
 
 # Check user is set
 
-if [ ! "$user" ]; then
-  user=$(whoami)
-fi
-
-# Check host is set
-
-if [ ! "$host" ]; then
-  echo "No host specified"
-  exit
+if [ ! "$user_name" ]; then
+  user_name=$(whoami)
 fi
 
 # Check docker is installed
 
-check_docker
+if [ "$do_check_docker" = "true" ]; then
+  check_docker
+fi
+
+# Check host is set
+
+if [ -z "$host_name" ]; then
+  echo "No host specified"
+  exit
+fi
 
 # Check container exists
 
-test=$(docker images |awk '{print $1}' |grep "$name")
+test=$(docker images |awk '{print $1}' |grep "$cont_name")
 
-if [ ! "$test" ]; then
+if [ -z "$test" ]; then
   if [ -f "docker-compose.yml" ]; then
     docker-compose build
   fi
@@ -256,7 +286,7 @@ fi
 # Handle options
 
 if [ "$new_opts" ]; then
-  opts=$new_opts
+  ssh_opts=$new_opts
 fi
 
 # Strip directory name from file mapped into docker
@@ -269,16 +299,16 @@ fi
 
 if [ "$verbose" = "true" ]; then
   if [ "$use_scp" = "true" ]; then
-    echo "Executing: docker run -v $src_file:/tmp/$map_file -it $name /bin/bash -c \"scp $opts /tmp/$map_file $user@$host:$dst_file\""
+    echo "Executing: docker run -v $src_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $user_name@$host_name:$dst_file\""
   else
-    echo "Executing: docker run -it $name /bin/bash -c \"ssh $opts $user@$host\"" 
+    echo "Executing: docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $user_name@$host_name\""
   fi
 fi
 
 # Run command SSH/SCP inside docker container to connect to host
 
 if [ "$use_scp" = "true" ]; then
-  docker run -v $src_file:/tmp/$map_file -it $name /bin/bash -c "scp $opts /tmp/$map_file $user@$host:$dst_file"
+  docker run -v $src_file:/tmp/$map_file -it $name /bin/bash -c "scp $opts /tmp/$map_file $user_name@$host_name:$dst_file"
 else
-  docker run -it $name /bin/bash -c "ssh $opts $user@$host"
+  docker run -it $cont_name /bin/bash -c "ssh $opts $user_name@$host_name"
 fi

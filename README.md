@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.0.4
+Version: 0.0.6
 
 Introduction
 ------------
@@ -14,7 +14,7 @@ New versions of SSH no longer have old ciphers compiled in as they are considere
 Similarly a lot of older equipment used 768 bit host keys and later versions of SSH will not
 connect to hosts with less that 1024 bit host keys.
 
-However, sometimes we need to connect to an old piece of hardware that has older versions 
+However, sometimes we need to connect to an old piece of hardware that has older versions
 of SSH that can not be upgraded.
 
 This script provides a wrapper that:
