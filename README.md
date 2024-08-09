@@ -89,27 +89,50 @@ Get usage information:
 ```
 ./ostrich.sh -h
 
-ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.4
+ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.8
 Richard Spindler <richard@lateralblast.com.au>
 
 Usage Information:
 
-      C)
-         Check Docker install
-      c)
-         Source file to copy (SCP)
-      d)
-         Destination file (SCP)
-      h)
-         Display help
-      o)
-         SSH/SCP Option
-      s)
-         Hostname
-      V)
-         Display Version
-      v)
-         Verbose mode
-      u)
-         Username
+ -a|--addopts|--addoptions)
+ Additional SSH options
+
+ -C|--check|--checkdocker)
+ Check Docker install
+
+ -c|--copy|--scp)
+ Source file to copy (SCP)
+
+ -d|--dest|--destination)
+ Destination file (SCP)
+
+ -D|--debug)
+ Enable debug mode
+
+ -h|--help|--usage)
+ Display help
+
+ -n|--nostrict)
+ Disable strict mode
+
+ -o|--opts|--options)
+ SSH/SCP Options
+
+ -r|--dryrun)
+ Dry run
+
+ -s|--host|--hostname)
+ Specify hostname
+
+ -t|--tag|--name)
+ Container name
+
+ -V|--version)
+ Display Version
+
+ -v|--verbose)
+ Enable verbose mode
+
+ -u|--user|--username)
+ Specify username
 ```
