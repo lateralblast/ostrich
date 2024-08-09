@@ -13,3 +13,5 @@
 # Added strict and debug switches
 # 0.0.7: Fri  9 Aug 2024 17:24:36 AEST
 # Shellcheck fixes and clean up
+# 0.0.8: Sat 10 Aug 2024 00:30:39 AEST
+# Updated commandline processing

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.0.7
+# Version:      0.0.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -17,13 +17,19 @@
 
 # Set defaults
 
-verbose="false"
+do_verbose="false"
 do_print_help="false"
 do_print_version="false"
 use_ssh="true"
 use_scp="false"
 do_strict="true"
 do_debug="false"
+do_dryrun="false"
+do_check_docker="false"
+exit_check_docker="false"
+command=""
+user_name=""
+host_name=""
 
 # Container name
 
@@ -31,7 +37,7 @@ cont_name="ostrich"
 
 # Get command line args
 
-args="$*"
+cli_args="$*"
 
 # Default SSH / SCP options
 
@@ -68,10 +74,16 @@ print_version () {
 handle_output () {
   output="$1"
   type="$2"
-  if [ "$verbose" = "true" ]; then
+  if [ "$do_verbose" = "true" ]; then
     case $type in
-      execute)
-        echo "Executing: $output"
+      exec)
+        echo "Executing:   $output"
+        ;;
+      info)
+        echo "Information: $output"
+        ;;
+      warn)
+        echo "Warning:     $output"
         ;;
       *)
         echo "$output"
@@ -81,93 +93,66 @@ handle_output () {
   return
 }
 
-# Check docker
+# Execute command
 
-check_docker () {
-  handle_output "Information: Checking docker"
-  test=$(which docker |grep -v found)
-  if [[ ! "$test" =~ "docker" ]]; then
-    echo "Warning: docker not installed"
-    exit
-  else
-    handle_output "Information: Found $test"
-  fi
-  handle_output "Information: Checking docker-compose"
-  test=$(which docker-compose |grep -v found)
-  if [[ ! "$test" =~ "docker" ]]; then
-    echo "Warning: docker-compose not installed"
-    exit
-  else
-    handle_output "Information: Found $test"
+execute_command () {
+  command="$1"
+  handle_output "$command" "exec"
+  if [ "$do_dryrun" = "false" ]; then
+    eval "$command"
   fi
   return
 }
 
-# If given no command line arguments print usage information
-# Handle when give @ in first argument
+# Check docker
 
-if [[ "$args" =~ "-" ]]; then
-  if [ "$1" ]; then
-    if [ "$2" ]; then
-      if [ "$2" == "--verbose" ]; then
-        test=$(echo "$1" |grep "@")
-        if [ "$test" ]; then
-          user_name=$(echo "$1" |cut -f1 -d@)
-          host_name=$(echo "$1" |cut -f2 -d@)
-        else
-          user_name=$(whoami)
-          host_name=$1
-        fi
-        user_name=$(whoami)
-        host_name=$1
-      else
-        test=$(echo "$2" |grep ":")
-        if [ "$test" ]; then
-          use_ssh="false"
-          use_scp="true"
-          src_file="$1"
-          details=$(echo "$2" |cut -f1 -d: |tr -d '\r')
-          dst_file=$(echo "$2" |cut -f2 -d:)
-          if [ "$dst_file" = "" ]; then
-            dst_file=$src_file
-          fi
-          test=$(echo "$details" |grep "@")
-          if [ "$test" ]; then
-            user_name=$(echo "$details" |cut -f1 -d@)
-            host_name=$(echo "$details" |cut -f2 -d@)
-          else
-            user_name=$(whoami)
-            host_name=$details
-          fi
-        else
-          echo "No destination file specified"
-          exit
-        fi
-      fi
-    else
-      test=$(echo "$1" |grep "@")
-      if [ "$test" ]; then
-        user_name=$(echo "$1" |cut -f1 -d@)
-        host_name=$(echo "$1" |cut -f2 -d@)
-      else
-        user_name=$(whoami)
-        host_name=$1
-      fi
-    fi
-  else
-    print_help
+check_docker () {
+  handle_output "Checking docker" "info"
+  test=$(which docker |grep -v found)
+  if [[ ! "$test" =~ "docker" ]]; then
+    handle_output "docker not installed" "warn"
     exit
+  else
+    handle_output "Found $test" "info"
   fi
+  handle_output "Checking docker-compose" "info"
+  test=$(which docker-compose |grep -v found)
+  if [[ ! "$test" =~ "docker" ]]; then
+    handle_output "docker-compose not installed" "warn"
+    exit
+  else
+    handle_output "Found $test" "info"
+  fi
+  return
+}
+
+# If given no arguments print help
+
+if [ "$cli_args" = "" ]; then
+  print_help
+  exit
 fi
 
-# Handle arguments
+# If given verbose switch set verbose mode
+
+if [[ "$cli_args" =~ "verbose" ]]; then
+  do_verbose="true"
+fi
+
+# Handle command line arguments
 
 while test $# -gt 0; do
-  case $args in
+  case $1 in
+    -a|--addopts|--addoptions)
+      # Additional SSH options
+      ssh_opts="$ssh_opts $2"
+      shift
+      ;;
     -C|--check|--checkdocker)
       # Check Docker install
-      verbose="true"
+      do_verbose="true"
       do_check_docker="true"
+      exit_check_docker="true"
       shift
       ;;
     -c|--copy|--scp)
@@ -175,13 +160,13 @@ while test $# -gt 0; do
       do_check_docker="true"
       use_scp="true"
       use_ssh="false"
-      src_file="$2"
+      source_file="$2"
       shift 2
       ;;
     -d|--dest|--destination)
       # Destination file (SCP)
       do_check_docker="true"
-      dst_file="$2"
+      dest_file="$2"
       shift 2
       ;;
     -D|--debug)
@@ -202,8 +187,13 @@ while test $# -gt 0; do
     -o|--opts|--options)
       # SSH/SCP Options
       do_check_docker="true"
-      new_opts="$2"
+      ssh_opts="$2"
       shift 2
+      ;;
+    -r|--dryrun)
+      # Dry run
+      do_dryrun="true"
+      shift
       ;;
     -s|--host|--hostname)
       # Specify hostname
@@ -222,7 +212,7 @@ while test $# -gt 0; do
       ;;
     -v|--verbose)
       # Enable verbose mode
-      verbose="true"
+      do_verbose="true"
       shift
       ;;
     -u|--user|--username)
@@ -231,8 +221,20 @@ while test $# -gt 0; do
       shift 2
       ;;
     *)
-      # Display help
-      do_print_help="true"
+      if [[ ! "$1" =~ ^-- ]]; then
+        if [[ "$1" =~ "@" ]]; then
+          command="$1"
+          if [[ "$1" =~ ":" ]]; then
+            use_scp="true"
+            use_ssh="false"
+          else
+            use_scp="false"
+            use_ssh="true"
+          fi
+        else
+          source_file="$1"
+        fi
+      fi
       shift
       ;;
   esac
@@ -266,7 +268,7 @@ fi
 
 # Check user is set
 
-if [ ! "$user_name" ]; then
+if [ "$user_name" = "" ]; then
   user_name=$(whoami)
 fi
 
@@ -278,39 +280,46 @@ fi
 
 # Check host is set
 
-if [ -z "$host_name" ]; then
-  echo "No host specified"
-  exit
+if [ "$host_name" = "" ]; then
+  if [ "$command" = "" ]; then
+    handle_output "No host specified" "warn"
+    exit
+  fi
 fi
 
 # Check container exists
 
-test=$(docker images |awk '{print $1}' |grep "$cont_name")
+cont_test=$( docker images | awk '{print $1}' | grep "$cont_name" | wc -l | sed "s/ //g" )
 
-if [ -z "$test" ]; then
+if [ "$cont_test" = "0" ]; then
   if [ -f "docker-compose.yml" ]; then
-    docker-compose build
+    execute_command "docker-compose build"
   fi
 fi
-
-# Handle options
-
-if [ "$new_opts" ]; then
-  ssh_opts=$new_opts
+if [ "$exit_check_docker" = "true" ]; then
+  exit
 fi
 
 # Strip directory name from file mapped into docker
 
 if [ "$use_scp" = "true" ]; then
-  map_file=$( basename -- "$src_file" )
+  map_file=$( basename -- "$source_file" )
 fi
 
 # Run command SSH/SCP inside docker container to connect to host
 
 if [ "$use_scp" = "true" ]; then
-  command="docker run -v $src_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $user_name@$host_name:$dst_file\""
+  if [ "$command" = "" ]; then
+    command="docker run -v $source_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $user_name@$host_name:$dest_file\""
+  else
+    command="docker run -v $source_file:/tmp/$map_file -it $cont_name /bin/bash -c \"scp $ssh_opts /tmp/$map_file $command\""
+  fi
 else
-  command="docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $user_name@$host_name\""
+  if [ "$command" = "" ]; then
+    command="docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $user_name@$host_name\""
+  else
+    command="docker run -it $cont_name /bin/bash -c \"ssh $ssh_opts $command\""
+  fi
 fi
-handle_output "$command" "execute"
-eval "$command"
+
+execute_command "$command"
