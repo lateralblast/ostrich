@@ -25,10 +25,9 @@ This script provides a wrapper that:
 License
 -------
 
-This software is licensed as CC-BA (Creative Commons By Attrbution)
+CC BY-SA: https://creativecommons.org/licenses/by-sa/4.0/
 
-http://creativecommons.org/licenses/by/4.0/legalcode
-
+Fund me here: https://ko-fi.com/richardatlateralblast
 
 Requirements
 ------------
