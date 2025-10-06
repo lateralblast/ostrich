@@ -15,3 +15,9 @@
 # Shellcheck fixes and clean up
 # 0.0.8: Sat 10 Aug 2024 00:30:39 AEST
 # Updated commandline processing
+# 0.0.9: Mon 06 Oct 2025 20:07:50 AEDT
+# Updated code inline with template script
+# 0.1.0: Mon 06 Oct 2025 20:27:50 AEDT
+# Fixed docker compose
+# 0.1.1: Tue 07 Oct 2025 00:09:44 AEDT
+# Initial commit of rewrite

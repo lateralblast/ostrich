@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.0.8
+Version: 0.1.1
 
 Introduction
 ------------
@@ -28,6 +28,14 @@ License
 CC BY-SA: https://creativecommons.org/licenses/by-sa/4.0/
 
 Fund me here: https://ko-fi.com/richardatlateralblast
+
+Status
+------
+
+This script is currently going through a refresh and clean up.
+
+The old script can be located in the old subdirectory.
+
 
 Requirements
 ------------
