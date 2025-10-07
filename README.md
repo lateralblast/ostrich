@@ -36,6 +36,11 @@ This script is currently going through a refresh and clean up.
 
 The old script can be located in the old subdirectory.
 
+As this script is primarily designed for connecting to older SSH servers,
+and older docker container with and old version of SSH and thus Linux is
+required. Also old Key Exchange algorithms are enabled by default, and
+strict host checking is disabled.
+
 
 Requirements
 ------------
