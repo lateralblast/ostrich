@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.1.4
+# Version:      0.1.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -777,6 +777,10 @@ while test $# -gt 0; do
         else
           if [ "${actions_list}" = "" ]; then
             print_help
+          else
+            if [ "${options['command']}" = "" ]; then
+              options['command']="$1"
+            fi
           fi
         fi
       fi

@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.1.4
+Version: 0.1.5
 
 Introduction
 ------------
