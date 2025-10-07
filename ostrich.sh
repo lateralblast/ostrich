@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.1.5
+# Version:      0.1.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -61,6 +61,7 @@ set_defaults () {
   options['composefile']="${options['builddir']}/docker-compose.yml"  # option : Compose file
   options['container']="${script['name']}"                            # option : Container name/tag
   options['sshargs']=""                                               # option : SSH options
+  options['ping']="true"                                              # option : Enable ping test
   options['mapfile']=""
   options['mapdir']=""
 }
@@ -182,27 +183,37 @@ execute_docker_command () {
       do_exit
     fi
   fi
-  if [ "${options['ssh']}" = "true" ]; then
-    if [ "${options['command']}" = "" ]; then
-      execute_command "docker run -it ${options['container']} /bin/bash -c \"ssh ${options['sshargs']} ${options['username']}@${options['hostname']}\""
+  if [ "${options['ping']}" = "true" ]; then
+    ping_test=$( ping -c1 "${options['hostname']}" | grep -c "1 received" )
+  else
+    ping_test=1
+  fi
+  if [ "${ping_test}" -eq 1 ]; then
+    if [ "${options['ssh']}" = "true" ]; then
+      if [ "${options['command']}" = "" ]; then
+        execute_command "docker run -it ${options['container']} /bin/bash -c \"ssh ${options['sshargs']} ${options['username']}@${options['hostname']}\""
+      else
+        execute_command "docker run -it ${options['container']} /bin/bash -c \"ssh ${options['sshargs']} ${options['username']}@${options['hostname']} \\\"${options['command']}\\\"\""
+      fi
     else
-      execute_command "docker run -it ${options['container']} /bin/bash -c \"ssh ${options['sshargs']} ${options['username']}@${options['hostname']} \\\"${options['command']}\\\"\""
+      if [ "${options['mapdir']}" = "" ]; then
+        if [ -f "${options['sourcefile']}" ]; then
+          options['mapfile']=$( basename -- "${options['sourcefile']}" )
+          execute_command "docker run -v ${options['sourcefile']}:${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destfile']}\""
+        else
+          warning_message "File \"${options['sourcefile']}\""
+        fi
+      else
+        options['mapdir']=$( dirname "${options['destfile']}" )
+        if ! [ -d "${options['mapdir']}" ]; then
+          execute_command "mkdir -p ${options['mapdir']}"
+        fi
+        execute_command "docker run -v ${options['mapdir']}:${options['mapdir']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['sourcefile']} ${options['destfile']}\""
+      fi
     fi
   else
-    if [ "${options['mapdir']}" = "" ]; then
-      if [ -f "${options['sourcefile']}" ]; then
-        options['mapfile']=$( basename -- "${options['sourcefile']}" )
-        execute_command "docker run -v ${options['sourcefile']}:${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destfile']}\""
-      else
-        warning_message "File \"${options['sourcefile']}\""
-      fi
-    else
-      options['mapdir']=$( dirname "${options['destfile']}" )
-      if ! [ -d "${options['mapdir']}" ]; then
-        execute_command "mkdir -p ${options['mapdir']}"
-      fi
-      execute_command "docker run -v ${options['mapdir']}:${options['mapdir']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['sourcefile']} ${options['destfile']}\""
-    fi
+    warning_message "Host \"${options['hostname']}\" is not responding"
+    do_exit
   fi
 }
 
@@ -653,6 +664,14 @@ while test $# -gt 0; do
       check_value "$1" "$2"
       sshargs_list+=( "-o $2" )
       shift 2
+      ;;
+    --ping)                           # switch : Enable ping test
+      options['ping']="true"
+      shift
+      ;;
+    --noping)                         # switch : Enable ping test
+      options['ping']="false"
+      shift
       ;;
     -P|--port)                        # switch : Port
       check_value "$1" "$2"

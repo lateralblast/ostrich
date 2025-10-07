@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.1.5
+Version: 0.1.6
 
 Introduction
 ------------
@@ -111,6 +111,9 @@ Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
 switch(es):
 -----------
+
+switch(es):
+-----------
 --action*)                        
     Action(s) to perform
 --check*)                         
@@ -147,6 +150,10 @@ switch(es):
     Disable old key exchange algorithms
 -o)                               
     SSH/SCP Options
+--ping)                           
+    Enable ping test
+--noping)                         
+    Enable ping test
 -P|--port)                        
     Port
 -S|--program)                     
@@ -235,4 +242,6 @@ container (default = ostrich)
    Container name/tag
 sshargs (default = )
    SSH options
+ping (default = )
+   Enable ping test
 ```
