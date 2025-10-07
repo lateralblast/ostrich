@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.1.1
+Version: 0.1.2
 
 Introduction
 ------------
@@ -76,7 +76,7 @@ SSH to a host:
 SSH to a host:
 
 ```
-./ostrich.sh -u admin -s 192.168.10.250
+./ostrich.sh --username admin --hostname 192.168.10.250
 ```
 
 SCP a file to a host:
@@ -88,13 +88,13 @@ SCP a file to a host:
 SCP a file to a host:
 
 ```
-./ostrich.sh -u admin -s 192.168.1.100 -c /tmp/blah -d /tmp/blah
+./ostrich.sh --username admin --hostname 192.168.1.100 --source /tmp/blah --destination /tmp/blah
 ```
 
 Get usage information:
 
 ```
-./ostrich.sh -h
+./ostrich.sh --help
 
 ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.8
 Richard Spindler <richard@lateralblast.com.au>

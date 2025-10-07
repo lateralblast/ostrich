@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.1.1
+# Version:      0.1.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -22,6 +22,7 @@ declare -A script
 declare -A options
 declare -a options_list
 declare -a actions_list
+declare -a sshargs_list
 
 # Grab script information and put it into an associative array
 
@@ -48,10 +49,10 @@ set_defaults () {
   options['dryrun']="false"                                                                     # option : Dryrun mode
   options['username']="${script['user']}"                                                       # option : SSH username
   options['hostname']=""                                                                        # option : Hostname to SSH to
-  options['source']=""                                                                          # option : Source file
+  options['sourcefile']=""                                                                          # option : Source file
   options['command']=""                                                                         # option : Command to run via SSH
   options['docker']=""                                                                          # option : Docker command
-  options['destination']=""                                                                     # option : Destination file
+  options['destfile']=""                                                                     # option : Destination file
   options['builddir']="/tmp/${script['name']}"                                                  # option : Docker build directory
   options['dockerfile']="${options['builddir']}/Dockerfile"                                     # option : Docker file
   options['composefile']="${options['builddir']}/docker-compose.yml"                            # option : Compose file
@@ -172,18 +173,18 @@ execute_docker_command () {
     execute_command "docker run -it ${options['container']} /bin/bash -c \"${options['command']}\""
   else
     if [ "${options['mapdir']}" = "" ]; then
-      if [ -f "${options['source']}" ]; then
-        options['mapfile']=$( basename -- "${options['source']}" )
-        execute_command "docker run -v ${options['source']}:${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destination']}\""
+      if [ -f "${options['sourcefile']}" ]; then
+        options['mapfile']=$( basename -- "${options['sourcefile']}" )
+        execute_command "docker run -v ${options['sourcefile']}:${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destfile']}\""
       else
-        warning_message "File \"${options['source']}\""
+        warning_message "File \"${options['sourcefile']}\""
       fi
     else
-      options['mapdir']=$( dirname "${options['destination']}" )
+      options['mapdir']=$( dirname "${options['destfile']}" )
       if ! [ -d "${options['mapdir']}" ]; then
         execute_command "mkdir -p ${options['mapdir']}"
       fi
-      execute_command "docker run -v ${options['mapdir']}:${options['mapdir']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['source']} ${options['destination']}\""
+      execute_command "docker run -v ${options['mapdir']}:${options['mapdir']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['sourcefile']} ${options['destfile']}\""
     fi
   fi
 }
@@ -221,8 +222,8 @@ reset_defaults () {
     set -x
   fi
   if [ "${options['scp']}" = "true" ]; then
-    options['mapfile']=$( basename -- "${options['source']}" )
-    options['docker']="docker run -v ${options['source']}:/tmp/${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} /tmp/${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destination']}\""
+    options['mapfile']=$( basename -- "${options['sourcefile']}" )
+    options['docker']="docker run -v ${options['sourcefile']}:/tmp/${options['mapfile']} -it ${options['container']} /bin/bash -c \"scp ${options['sshargs']} /tmp/${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destfile']}\""
   else
     options['docker']="docker run -it ${options['container']} /bin/bash -c \"ssh ${options['sshargs']} ${options['username']}@${options['hostname']} ${options['command']}\""
   fi
@@ -537,40 +538,58 @@ while test $# -gt 0; do
       actions_list+=("$2")
       shift 2
       ;;
-    -a|--addopts|--addoptions)        # switch : Additional SSH options
-      check_value "$1" "$2"
-      options['sshargs']="${options['sshargs']} $2"
-      shift 2
-      ;;
-    -C|--check|--checkdocker)         # switch : Check Docker install
+    --check*)                         # switch : Check Docker install
       actions_list+=("checkdocker")
       shift
       ;;
-    -c|--copy|--scp)                  # switch: Source file to copy (SCP)
-      check_value "$1" "$2"
-      actions_list+=("scp")
-      options['scp']="true"
-      options['ssh']="false"
-      options['source']="$2"
-      shift 2
-      ;;
-    -d|--dest|--destination)          # switch : Destination file (SCP)
-      check_value "$1" "$2"
-      options['destination']="$2"
-      shift 2
-      ;;
-    -X|--dockerfile)                  # switch : Docker file
-      check_value "$1" "$2"
-      options['dockerfile']="$2"
-      shift 2
-      ;;
-    -Y|--composefile)                 # switch : Docker compose file
+    --composefile)                    # switch : Docker compose file
       check_value "$1" "$2"
       options['composefile']="$2"
       shift 2
       ;;
-    -D|--debug)                       # swtich : Enable debug mode
+    --copy|--scp)                     # switch: SCP
+      actions_list+=( "scp" )
+      options['scp']="true"
+      options['ssh']="false"
+      shift 2
+      ;;
+    -c|--cipher)                      # switch : Cipher
+      check_value "$1" "$2"
+      sshargs_list+=( "-c $2" )
+      ;;      
+    -D|--sftp*)                       # switch : SFTP server path
+      check_value "$1" "$2"
+      sshargs_list+=( "-D $2" )
+      ;;      
+    -i|--identity*)                   # switch : SFTP server path
+      check_value "$1" "$2"
+      sshargs_list+=( "-i $2" )
+      ;;      
+    -F|--sshconf*)                    # switch : SSH config
+      check_value "$1" "$2"
+      sshargs_list+=( "-D $2" )
+      ;;      
+    --debug)                          # swtich : Enable debug mode
       options['debug']="true"
+      shift
+      ;;
+    --destfile|--destinationfile)     # switch : Destination file (SCP)
+      check_value "$1" "$2"
+      options['destfile']="$2"
+      shift 2
+      ;;
+    -J}--destination)                 # switch : Destination
+      check_value "$1" "$2"
+      sshargs_list+=( "-J $2" )
+      shift 2
+      ;;
+    --dockerfile)                     # switch : Docker file
+      check_value "$1" "$2"
+      options['dockerfile']="$2"
+      shift 2
+      ;;
+    --dryrun)                         # switch : Dry run
+      options['dryrun']="true"
       shift
       ;;
     -h|--help)                        # switch : Display help
@@ -578,30 +597,45 @@ while test $# -gt 0; do
       shift
       exit
       ;;
-    -O|--oldkex)                      # switch : Enable old key exchange algorithms
+    -l}--limit)                       # switch : Limit
+      check_value "$1" "$2"
+      sshargs_list+=( "-l $2" )
+      shift 2
+      ;;
+    --oldkex)                         # switch : Enable old key exchange algorithms
       options['oldkex']="true"
       shift
       ;;
-    -N|--nooldkex)                    # switch : Disable old key exchange algorithms
+    --nooldkex)                       # switch : Disable old key exchange algorithms
       options['oldkex']="false"
       shift
       ;;
-    -S|--strict)                      # switch : Enable strict mode
+    --source*)                        # switch : Destination file (SCP)
+      check_value "$1" "$2"
+      options['sourcefile']="$2"
+      shift 2
+      ;;
+    --strict)                         # switch : Enable strict mode
       options['strict']="true"
       shift
       ;;
-    -n|--nostrict)                    # switch : Disable strict mode
+    --nostrict)                       # switch : Disable strict mode
       options['strict']="false"
       shift
       ;;
-    -o|--opts|--options)              # switch : SSH/SCP Options
+    --sshopt*)                        # switch : Additional SSH/SCP options
       check_value "$1" "$2"
-      options['sshargs']+="$2"
+      sshargs_list+=( "$2" )
       shift 2
       ;;
-    -r|--dryrun)                      # switch : Dry run
-      options['dryrun']="true"
-      shift
+    -o)                               # switch : SSH/SCP Options
+      check_value "$1" "$2"
+      sshargs_list+=( "-o $2" )
+      shift 2
+      ;;
+    -P|--port)                        # switch : Port
+      check_value "$1" "$2"
+      options['sshargs']+=( "-P $2" )
       ;;
     -s|--host|--hostname)             # switch : Specify hostname
       check_value "$1" "$2"
@@ -613,11 +647,16 @@ while test $# -gt 0; do
       options['container']="$2"
       shift 2
       ;;
-    -U|--usage)                       # switch : Usage
+    --usage)                          # switch : Usage
       check_value "$1" "$2"
       print_usage "$2"
       shift 2
       exit
+      ;;
+    -u|--user*)                       # switch : Specify username
+      check_value "$1" "$2"
+      options['username']="$2"
+      shift 2
       ;;
     -V|--version)                     # switch : Display Version
       print_version
@@ -626,48 +665,44 @@ while test $# -gt 0; do
       ;;
     -v|--verbose)                     # switch : Enable verbose mode
       options['verbose']="true"
+      options['sshargs']+=( "-v" )
       shift
       ;;
-    -u|--user*)                       # switch : Specify username
-      check_value "$1" "$2"
-      options['username']="$2"
-      shift 2
-      ;;
     *)
-      if [[ ! "$1" =~ ^-- ]]; then
+      if [[ ! "$1" =~ ^- ]]; then
         if [[ "$1" =~ @ ]]; then
           IFS '@' read -r options['username'] options['hostname'] <<< "$1"
           if [[ "${options['hostname']}" =~ : ]]; then
-            IFS ':' read -r options['hostname'] options['source'] <<< "${options['hostname']}"
+            IFS ':' read -r options['hostname'] options['sourcefile'] <<< "${options['hostname']}"
             if [ "$2" = "" ]; then
               warning_message "No destination file specified"
               do_exit
             else
-              options['destination']="$2"
+              options['destfile']="$2"
             fi
             options['scp']="true"
             options['ssh']="false"
-            options['mapdir']=$( dirname "${options['destination']}")
-#            options['command']="scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['source']} ${options['destination']}"
+            options['mapdir']=$( dirname "${options['destfile']}")
+#            options['command']="scp ${options['sshargs']} ${options['username']}@${options['hostname']}:${options['sourcefile']} ${options['destfile']}"
           else
             options['scp']="false"
             options['ssh']="true"
-            options['command']="ssh ${options['sshargs']} ${options['username']}@${options['hostname']}"
+#            options['command']="ssh ${options['sshargs']} ${options['username']}@${options['hostname']}"
           fi
         else
           if [[ "$2" =~ : ]]; then
-            options['source']="$1"
+            options['sourcefile']="$1"
             if [[ "$2" =~ @ ]]; then
               IFS '@' read -r options['username'] options['hostname'] <<< "$2"
-              IFS ':' read -r options['hostname'] options['destination'] <<< "${options['hostname']}"
+              IFS ':' read -r options['hostname'] options['destfile'] <<< "${options['hostname']}"
             else
-              IFS ':' read -r options['hostname'] options['destination'] <<< "$2"
+              IFS ':' read -r options['hostname'] options['destfile'] <<< "$2"
             fi
             options['scp']="true"
             options['ssh']="false"
-            options['mapfile']=$( basename -- "${options['source']}" )
-            options['mapfile']="/tmp/${options['source']}"
-#            options['command']="scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destination']}"
+            options['mapfile']=$( basename -- "${options['sourcefile']}" )
+            options['mapfile']="/tmp/${options['sourcefile']}"
+#            options['command']="scp ${options['sshargs']} ${options['mapfile']} ${options['username']}@${options['hostname']}:${options['destfile']}"
           else
             options['scp']="false"
             options['ssh']="true"
@@ -678,7 +713,11 @@ while test $# -gt 0; do
         execute_docker_command
         do_exit
       else
-        print_help
+        if [[ "$1" =~ ^- ]]; then
+          sshargs_list+=( "$1" )
+        else
+          print_help
+        fi
       fi
       shift
       ;;

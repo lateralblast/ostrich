@@ -21,3 +21,5 @@
 # Fixed docker compose
 # 0.1.1: Tue 07 Oct 2025 00:09:44 AEDT
 # Initial commit of rewrite
+# 0.1.2: Tue  7 Oct 2025 11:17:08 AEDT
+# More SSH/SCP switch support
