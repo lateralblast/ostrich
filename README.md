@@ -5,7 +5,7 @@ OSTRICH
 
 Old SSH Terminal Remote Interactive Console Helper
 
-Version: 0.1.2
+Version: 0.1.4
 
 Introduction
 ------------
@@ -76,7 +76,7 @@ SSH to a host:
 SSH to a host:
 
 ```
-./ostrich.sh --username admin --hostname 192.168.10.250
+./ostrich.sh --ssh --username admin --hostname 192.168.10.250
 ```
 
 SCP a file to a host:
@@ -91,55 +91,143 @@ SCP a file to a host:
 ./ostrich.sh --username admin --hostname 192.168.1.100 --source /tmp/blah --destination /tmp/blah
 ```
 
+SSH to a host and run a command:
+
+```
+./ostrich.sh username@hostname "ls -l"
+```
+
 Get usage information:
 
 ```
 ./ostrich.sh --help
 
-ostrich (Old SSH Terminal Remote Interactive Console Helper) 0.0.8
-Richard Spindler <richard@lateralblast.com.au>
+Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
-Usage Information:
+switch(es):
+-----------
+--action*)                        
+    Action(s) to perform
+--check*)                         
+    Check Docker install
+-c|--cipher)                      
+    Cipher
+--composefile)                    
+    Docker compose file
+--command)                        
+    Run command via SSH
+--copy|--scp)                     
+    SCP
+-D|--sftps*)                      
+    SFTP server path
+-i|--identity*)                   
+    SFTP server path
+-F|--sshconf*)                    
+    SSH config
+--destfile|--destinationfile)     
+    Destination file (SCP)
+-J|--destination)                 
+    Destination
+--dockerfile)                     
+    Docker file
+--dryrun)                         
+    Dry run
+-h|--help)                        
+    Display help
+-l}--limit)                       
+    Limit
+--oldkex)                         
+    Enable old key exchange algorithms
+--nooldkex)                       
+    Disable old key exchange algorithms
+-o)                               
+    SSH/SCP Options
+-P|--port)                        
+    Port
+-S|--program)                     
+    Program to use for the encrypted connection
+-s|--host|--hostname)             
+    Hostname
+--source*)                        
+    Destination file (SCP)
+--ssh)                            
+    SSH
+--sshopt*)                        
+    Additional SSH/SCP options
+--strict)                         
+    Enable strict mode
+--nostrict)                       
+    Disable strict mode
+--tag|--name)                     
+    Container name
+--usage)                          
+    Usage
+-u|--user*)                       
+    Username
+-V|--version)                     
+    Display Version
+-v|--verbose)                     
+    Enable verbose mode
+-X|--sftpo*)                      
+    Program to use for the encrypted connection
+```
 
- -a|--addopts|--addoptions)
- Additional SSH options
+Get actions usage/information:
 
- -C|--check|--checkdocker)
- Check Docker install
+```
+Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
- -c|--copy|--scp)
- Source file to copy (SCP)
+action(s):
+----------
+check*)               
+    Check docker
+shell*)               
+    Run shellcheck against script
+ssh|scp)              
+    Perform SSH or SCP action
+```
 
- -d|--dest|--destination)
- Destination file (SCP)
+Get options usage/information:
 
- -D|--debug)
- Enable debug mode
+```
+Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
- -h|--help|--usage)
- Display help
-
- -n|--nostrict)
- Disable strict mode
-
- -o|--opts|--options)
- SSH/SCP Options
-
- -r|--dryrun)
- Dry run
-
- -s|--host|--hostname)
- Specify hostname
-
- -t|--tag|--name)
- Container name
-
- -V|--version)
- Display Version
-
- -v|--verbose)
- Enable verbose mode
-
- -u|--user|--username)
- Specify username
+option(s):
+----------
+verbose (default = true)
+   Verbose mode
+"ssh" (default = )
+   SSH mode
+scp (default = false)
+   SCP mode
+strict (default = false)
+   Strict mode
+oldkex (default = true)
+   Use old key exchange algorithms
+debug (default = false)
+   Debug mode
+dryrun (default = false)
+   Dryrun mode
+username (default = spindler)
+   SSH username
+hostname (default = )
+   Hostname to SSH to
+sourcefile (default = )
+   Source file
+command (default = )
+   Command to run via SSH
+docker (default = )
+   Docker command
+destfile (default = )
+   Destination file
+builddir (default = /tmp/ostrich)
+   Docker build directory
+dockerfile (default = /tmp/ostrich/Dockerfile)
+   Docker file
+composefile (default = /tmp/ostrich/docker-compose.yml)
+   Compose file
+container (default = ostrich)
+   Container name/tag
+sshargs (default = )
+   SSH options
 ```
