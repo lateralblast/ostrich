@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         ozzie (ostrich) (Old SSH Terminal Remote Interactive Console Helper)
-# Version:      0.1.6
+# Version:      0.1.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
