@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Name:         ostrich (Old SSH Terminal Remote Interactive Console Helper)
+# Name:         ozzie (ostrich) (Old SSH Terminal Remote Interactive Console Helper)
 # Version:      0.1.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
@@ -28,7 +28,7 @@ declare -a sshargs_list
 
 script['args']="$*"
 script['file']="$0"
-script['name']="ostrich"
+script['name']="ozzie"
 script['file']=$( realpath "${script['file']}" )
 script['path']=$( dirname "${script['file']}" )
 script['modulepath']="${script['path']}/modules"

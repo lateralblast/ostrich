@@ -1,7 +1,7 @@
 ![alt tag](ostrich.jpg)
 
-OSTRICH
-=======
+Ozzie OSTRICH
+=============
 
 Old SSH Terminal Remote Interactive Console Helper
 
@@ -75,39 +75,39 @@ Examples
 SSH to a host:
 
 ```
-./ostrich.sh admin@192.168.10.250
+./ozzie.sh admin@192.168.10.250
 ```
 
 SSH to a host:
 
 ```
-./ostrich.sh --ssh --username admin --hostname 192.168.10.250
+./ozzie.sh --ssh --username admin --hostname 192.168.10.250
 ```
 
 SCP a file to a host:
 
 ```
-./ostrich.sh /tmp/blah admin@192.168.1.199:/tmp/blah
+./ozzie.sh /tmp/blah admin@192.168.1.199:/tmp/blah
 ```
 
 SCP a file to a host:
 
 ```
-./ostrich.sh --username admin --hostname 192.168.1.100 --source /tmp/blah --destination /tmp/blah
+./ozzie.sh --username admin --hostname 192.168.1.100 --source /tmp/blah --destination /tmp/blah
 ```
 
 SSH to a host and run a command:
 
 ```
-./ostrich.sh username@hostname "ls -l"
+./ozzie.sh username@hostname "ls -l"
 ```
 
 Get usage information:
 
 ```
-./ostrich.sh --help
+./ozzie.sh --help
 
-Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
+Usage: ozzie.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
 switch(es):
 -----------
@@ -187,7 +187,7 @@ switch(es):
 Get actions usage/information:
 
 ```
-Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
+Usage: ozzie.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
 action(s):
 ----------
@@ -202,7 +202,7 @@ ssh|scp)
 Get options usage/information:
 
 ```
-Usage: ostrich.sh --action(s) [action(,action)] --option(s) [option(,option)]
+Usage: ozzie.sh --action(s) [action(,action)] --option(s) [option(,option)]
 
 option(s):
 ----------
