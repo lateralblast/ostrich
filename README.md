@@ -15,7 +15,7 @@ Similarly a lot of older equipment used 768 bit host keys and later versions of 
 connect to hosts with less that 1024 bit host keys.
 
 However, sometimes we need to connect to an old piece of hardware that has older versions
-of SSH that can not be upgraded.
+of SSH that can not be upgraded. An example of this is connecting to old APC PDUs.
 
 This script provides a wrapper that:
 
@@ -40,7 +40,6 @@ As this script is primarily designed for connecting to older SSH servers,
 and older docker container with and old version of SSH and thus Linux is
 required. Also old Key Exchange algorithms are enabled by default, and
 strict host checking is disabled.
-
 
 Requirements
 ------------
@@ -78,7 +77,7 @@ SSH to a host:
 ./ozzie.sh admin@192.168.10.250
 ```
 
-SSH to a host:
+SSH to a host (starts an interactive session):
 
 ```
 ./ozzie.sh --ssh --username admin --hostname 192.168.10.250
